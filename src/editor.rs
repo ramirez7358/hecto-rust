@@ -145,13 +145,29 @@ impl Editor {
 
     fn search(&mut self) {
         let old_position = self.cursor_position.clone();
-        if let Some(query) = self.prompt("Search: ", |editor, _, query| {
-            if let Some(position) = editor.document.find(&query) {
-                editor.cursor_position = position;
-                editor.scroll();
-            }
-        }).unwrap_or(None) {
-            if let Some(position) = self.document.find(&query[..]) {
+        if let Some(query) = self
+            .prompt(
+                "Search (ESC to cancel, Arrows to navigate): ",
+                |editor, key, query| {
+                    let mut moved = false;
+                    match key {
+                        Key::Right | Key::Down => {
+                            editor.move_cursor(Key::Right);
+                            moved = true;
+                        }
+                        _ => ()
+                    }
+                    if let Some(position) = editor.document.find(&query, &editor.cursor_position) {
+                        editor.cursor_position = position;
+                        editor.scroll();
+                    } else if moved {
+                        editor.move_cursor(Key::Left)
+                    }
+                },
+            )
+            .unwrap_or(None)
+        {
+            if let Some(position) = self.document.find(&query[..], &old_position) {
                 self.cursor_position = position;
             } else {
                 self.status_message = StatusMessage::from(format!("Not found: {}", query));
@@ -329,8 +345,8 @@ impl Editor {
 
     fn prompt<C>(&mut self, prompt: &str, callback: C) -> Result<Option<String>, std::io::Error>
     where
-        C: Fn(&mut Self, Key, &String)
-     {
+        C: Fn(&mut Self, Key, &String),
+    {
         let mut result = String::new();
         loop {
             self.status_message = StatusMessage::from(format!("{prompt}{result}"));
@@ -367,7 +383,8 @@ impl Editor {
 impl Default for Editor {
     fn default() -> Self {
         let args: Vec<String> = env::args().collect();
-        let mut initial_status = String::from("HELP: Ctrl-F = find | Ctrl-S = save | Ctrl-Q = quit");
+        let mut initial_status =
+            String::from("HELP: Ctrl-F = find | Ctrl-S = save | Ctrl-Q = quit");
         let document = if args.len() > 1 {
             let file_name = &args[1];
             let doc = Document::open(file_name);
