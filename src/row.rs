@@ -29,24 +29,33 @@ impl Row {
         let end = cmp::min(end, self.string.len());
         let start = cmp::min(start, end);
         let mut result = String::new();
-        for grapheme in self.string[..]
+        let mut current_highlight = &highlighting::Type::None;
+        for (index, grapheme) in self.string[..]
             .graphemes(true)
+            .enumerate()
             .skip(start)
             .take(end - start)
         {
             if let Some(c) = grapheme.chars().next() {
+                let highlighting_type = self
+                    .highlighting
+                    .get(index)
+                    .unwrap_or(&highlighting::Type::None);
+                if highlighting_type != current_highlight {
+                    current_highlight = highlighting_type;
+                    let start_highlight =
+                        format!("{}", termion::color::Fg(highlighting_type.to_color()));
+                    result.push_str(&start_highlight[..]);
+                }
                 if c == '\t' {
                     result.push_str(" ");
-                } else if c.is_ascii_digit() {
-                    result.push_str(&format!(
-                        "{}{}{}",
-                        termion::color::Fg(color::Rgb(220, 163, 163)),
-                        c,
-                        color::Fg(color::Reset),
-                    ))
+                } else {
+                    result.push(c);
                 }
             }
         }
+        let end_highlight = format!("{}", termion::color::Fg(color::Reset));
+        result.push_str(&end_highlight[..]);
         result
     }
     #[must_use]
@@ -111,7 +120,7 @@ impl Row {
         Self {
             string: splitted_row,
             len: splitted_length,
-            highlighting: Vec::new()
+            highlighting: Vec::new(),
         }
     }
 
@@ -156,5 +165,17 @@ impl Row {
             }
         }
         None
+    }
+
+    pub fn highlight(&mut self) {
+        let mut highlighting = Vec::new();
+        for c in self.string.chars() {
+            if c.is_ascii_digit() {
+                highlighting.push(highlighting::Type::Number)
+            } else {
+                highlighting.push(highlighting::Type::None)
+            }
+        }
+        self.highlighting = highlighting;
     }
 }
