@@ -1,3 +1,4 @@
+use crate::SearchDirection;
 use crate::Position;
 use crate::Row;
 use std::fs;
@@ -114,7 +115,7 @@ impl Document {
     }
 
     #[allow(clippy::indexing_slicing)]
-    pub fn find(&self, query: &str, at: &Position, direction:: SearchDirection) -> Option<Position> {
+    pub fn find(&self, query: &str, at: &Position, direction: SearchDirection) -> Option<Position> {
         if at.y >= self.rows.len() {
             return None;
         }
