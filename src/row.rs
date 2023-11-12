@@ -1,3 +1,4 @@
+use crate::highlighting;
 use crate::SearchDirection;
 use std::cmp;
 use termion::color;
@@ -6,7 +7,20 @@ use unicode_segmentation::UnicodeSegmentation;
 #[derive(Default)]
 pub struct Row {
     string: String,
+    highlighting: Vec<highlighting::Type>,
     len: usize,
+}
+
+impl From<&str> for Row {
+    fn from(slice: &str) -> Self {
+        let mut row = Self {
+            string: String::from(slice),
+            highlighting: Vec::new(),
+            len: 0,
+        };
+        row.update_len();
+        row
+    }
 }
 
 impl Row {
@@ -79,11 +93,26 @@ impl Row {
 
     #[must_use]
     pub fn split(&mut self, at: usize) -> Self {
-        let beginning: String = self.string[..].graphemes(true).take(at).collect();
-        let remainder: String = self.string[..].graphemes(true).skip(at).collect();
-        self.string = beginning;
-        self.update_len();
-        Self::from(&remainder[..])
+        let mut row: String = String::new();
+        let mut length = 0;
+        let mut splitted_row: String = String::new();
+        let mut splitted_length = 0;
+        for (index, grapheme) in self.string[..].graphemes(true).enumerate() {
+            if index < at {
+                length += 1;
+                row.push_str(grapheme);
+            } else {
+                splitted_length += 1;
+                splitted_row.push_str(grapheme);
+            }
+        }
+        self.string = row;
+        self.len = length;
+        Self {
+            string: splitted_row,
+            len: splitted_length,
+            highlighting: Vec::new()
+        }
     }
 
     #[must_use]
@@ -127,16 +156,5 @@ impl Row {
             }
         }
         None
-    }
-}
-
-impl From<&str> for Row {
-    fn from(slice: &str) -> Self {
-        let mut row = Self {
-            string: String::from(slice),
-            len: 0,
-        };
-        row.update_len();
-        row
     }
 }
