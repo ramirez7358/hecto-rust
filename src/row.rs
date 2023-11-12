@@ -1,5 +1,6 @@
 use crate::SearchDirection;
 use std::cmp;
+use termion::color;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Default)]
@@ -19,11 +20,23 @@ impl Row {
             .skip(start)
             .take(end - start)
         {
-            if grapheme == "\t" {
-                result.push(' ');
-            } else {
-                result.push_str(grapheme);
+            if let Some(c) = grapheme.chars().next() {
+                if c == '\t' {
+                    result.push_str(" ");
+                } else if c.is_ascii_digit() {
+                    result.push_str(&format!(
+                        "{}{}{}",
+                        termion::color::Fg(color::Rgb(220, 163, 163)),
+                        c,
+                        color::Fg(color::Reset),
+                    ))
+                }
             }
+            // if grapheme == "\t" {
+            //     result.push(' ');
+            // } else {
+            //     result.push_str(grapheme);
+            // }
         }
         result
     }
@@ -109,8 +122,9 @@ impl Row {
             substring.rfind(query)
         };
         if let Some(matching_byte_index) = matching_byte_index {
-            for(grapheme_index, (byte_index, _)) in 
-            substring[..].grapheme_indices(true).enumerate() {
+            for (grapheme_index, (byte_index, _)) in
+                substring[..].grapheme_indices(true).enumerate()
+            {
                 if matching_byte_index == byte_index {
                     #[allow(clippy::integer_arithmetic)]
                     return Some(start + grapheme_index);
