@@ -179,16 +179,6 @@ impl Editor {
             self.cursor_position = old_position;
             self.scroll();
         } 
-        // {
-        //     if let Some(position) = self.document.find(&query[..], &old_position) {
-        //         self.cursor_position = position;
-        //     } else {
-        //         self.status_message = StatusMessage::from(format!("Not found: {}", query));
-        //     }
-        // } else {
-        //     self.cursor_position = old_position;
-        //     self.scroll();
-        // }
     }
 
     fn process_keypress(&mut self) -> Result<(), std::io::Error> {
@@ -245,7 +235,7 @@ impl Editor {
         let Position { x, y } = self.cursor_position;
         let width = self.terminal.size().width as usize;
         let height = self.terminal.size().height as usize;
-        let mut offset = &mut self.offset;
+        let offset = &mut self.offset;
         if y < offset.y {
             offset.y = y;
         } else if y >= offset.y.saturating_add(height) {

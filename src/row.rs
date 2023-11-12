@@ -32,11 +32,6 @@ impl Row {
                     ))
                 }
             }
-            // if grapheme == "\t" {
-            //     result.push(' ');
-            // } else {
-            //     result.push_str(grapheme);
-            // }
         }
         result
     }
