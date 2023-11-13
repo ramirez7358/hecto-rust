@@ -172,13 +172,15 @@ impl Editor {
                     } else if moved {
                         editor.move_cursor(Key::Left)
                     }
+                    self.document.highlight(None);
                 },
             )
             .unwrap_or(None);
         if query.is_none() {
             self.cursor_position = old_position;
             self.scroll();
-        } 
+        }
+        self.document.highlight(None);
     }
 
     fn process_keypress(&mut self) -> Result<(), std::io::Error> {
