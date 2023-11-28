@@ -14,7 +14,7 @@ const QUIT_TIMES: u8 = 3;
 #[derive(PartialEq, Copy, Clone)]
 pub enum SearchDirection {
     Forward,
-    Backward
+    Backward,
 }
 
 #[derive(Default, Clone)]
@@ -165,15 +165,19 @@ impl Editor {
                             moved = true;
                         }
                         Key::Left | Key::Up => direction = SearchDirection::Backward,
-                        _ => direction = SearchDirection::Forward
+                        _ => direction = SearchDirection::Forward,
                     }
-                    if let Some(position) = editor.document.find(&query, &editor.cursor_position, direction) {
+                    if let Some(position) =
+                        editor
+                            .document
+                            .find(&query, &editor.cursor_position, direction)
+                    {
                         editor.cursor_position = position;
                         editor.scroll();
                     } else if moved {
                         editor.move_cursor(Key::Left)
                     }
-                    self.document.highlight(None);
+                    editor.document.highlight(Some(query))
                 },
             )
             .unwrap_or(None);
